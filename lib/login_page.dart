@@ -22,8 +22,14 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (userCredential.user != null) {
-        context.go(
-            '/categories'); // Navigate to categories if sign in is successful
+        // Check if the user is 'asma@gmail.com'
+        if (userCredential.user!.uid == 'vIVPsbDZekcpB8FDL2nVNCfn76E2') {
+          // Navigate to categories if sign in is successful and uid matches
+          context.go('/categories/admin');
+        } else {
+          // Navigate to messages if sign in is successful for other users
+          context.go('/categories');
+        }
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
