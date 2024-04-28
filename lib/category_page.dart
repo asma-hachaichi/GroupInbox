@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'app_state.dart'; // This file should have your ApplicationState which contains the user's email.
 
 class CategoryPage extends StatefulWidget {
   @override
@@ -10,140 +12,53 @@ class CategoryPage extends StatefulWidget {
 class _CategoryPageState extends State<CategoryPage> {
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
-  void _addCategory(String name) {
-    String newCategoryId = DateTime.now().millisecondsSinceEpoch.toString();
-    _firebaseFirestore.collection('category').doc(newCategoryId).set({
-      'ID': newCategoryId,
-      'Name': name,
-    });
-  }
+  void _toggleSubscription(String categoryName, bool isSubscribed) async {
+    final userEmail =
+        Provider.of<ApplicationState>(context, listen: false).email;
+    final docId = '${userEmail}_$categoryName';
+    if (isSubscribed) {
+      // Unsubscribe the user and decrement the inscriptions count
+      await _firebaseFirestore.collection('inscription').doc(docId).delete();
 
-  Future<int> _getMessageCount(String categoryName) async {
-    var querySnapshot = await _firebaseFirestore
-        .collection('message')
-        .where('category', isEqualTo: categoryName)
-        .get();
-    return querySnapshot.docs.length;
-  }
+      // Find the category document and decrement the inscriptions count
+      var categoryQuery = await _firebaseFirestore
+          .collection('category')
+          .where('Name', isEqualTo: categoryName)
+          .limit(1)
+          .get();
 
-  Future<int> _getInscriptionCount(String categoryName) async {
-    var querySnapshot = await _firebaseFirestore
-        .collection('inscription')
-        .where('category', isEqualTo: categoryName)
-        .get();
-    return querySnapshot.docs.length;
-  }
+      if (categoryQuery.docs.isNotEmpty) {
+        DocumentReference categoryDocRef = categoryQuery.docs.first.reference;
+        categoryDocRef.update({'Inscriptions': FieldValue.increment(-1)});
+      }
+    } else {
+      // Subscribe the user and increment the inscriptions count
+      await _firebaseFirestore.collection('inscription').doc(docId).set({
+        'user': userEmail,
+        'category': categoryName,
+      });
 
-  void _showAddMessageForm(String categoryName) {
-    TextEditingController objectController = TextEditingController();
-    TextEditingController bodyController = TextEditingController();
+      // Find the category document and increment the inscriptions count
+      var categoryQuery = await _firebaseFirestore
+          .collection('category')
+          .where('Name', isEqualTo: categoryName)
+          .limit(1)
+          .get();
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Ajouter un nouveau message'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text('Catégorie: $categoryName',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              TextField(
-                controller: objectController,
-                decoration: InputDecoration(labelText: 'Objet du message'),
-              ),
-              TextField(
-                controller: bodyController,
-                decoration: InputDecoration(labelText: 'Corps du message'),
-                maxLines: 3,
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Annuler'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: Text('Ajouter'),
-              onPressed: () {
-                _firebaseFirestore.collection('message').add({
-                  'category': categoryName,
-                  'object': objectController.text,
-                  'body': bodyController.text,
-                });
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _deleteCategory(String categoryId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Confirmer la suppression'),
-          content: Text('Êtes-vous sûr de vouloir supprimer cette catégorie?'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Annuler'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: Text('Supprimer', style: TextStyle(color: Colors.red)),
-              onPressed: () {
-                _firebaseFirestore
-                    .collection('category')
-                    .doc(categoryId)
-                    .delete();
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showAddCategoryForm() {
-    TextEditingController nameController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Ajouter une nouvelle catégorie'),
-          content: TextField(
-            controller: nameController,
-            decoration: InputDecoration(labelText: 'Nom de la catégorie'),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Annuler'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: Text('Ajouter'),
-              onPressed: () {
-                _addCategory(nameController.text);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+      if (categoryQuery.docs.isNotEmpty) {
+        DocumentReference categoryDocRef = categoryQuery.docs.first.reference;
+        categoryDocRef.update({'Inscriptions': FieldValue.increment(1)});
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final userEmail = Provider.of<ApplicationState>(context).email;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Catégories'),
+        title: Text('Categories'),
       ),
       drawer: Drawer(
         child: SafeArea(
@@ -178,64 +93,44 @@ class _CategoryPageState extends State<CategoryPage> {
       body: StreamBuilder<QuerySnapshot>(
         stream: _firebaseFirestore.collection('category').snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.hasError) {
+          if (snapshot.hasError)
             return Text('Erreur lors du chargement des données');
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting)
             return Center(child: CircularProgressIndicator());
-          }
-          final List<DocumentSnapshot> documents = snapshot.data!.docs;
-          return ListView.builder(
-            padding: const EdgeInsets.all(8),
-            itemCount: documents.length,
-            itemBuilder: (context, index) {
-              var category = documents[index].data() as Map<String, dynamic>;
-              String categoryName = category['Name'];
 
-              return FutureBuilder<List<int>>(
-                future: Future.wait([
-                  _getMessageCount(categoryName),
-                  _getInscriptionCount(categoryName),
-                ]),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Text('Erreur lors du chargement des données');
+          final List<DocumentSnapshot> categories = snapshot.data!.docs;
+          return ListView.builder(
+            itemCount: categories.length,
+            itemBuilder: (context, index) {
+              final category = categories[index];
+              final categoryName = category['Name'];
+
+              return FutureBuilder<DocumentSnapshot>(
+                future: _firebaseFirestore
+                    .collection('inscription')
+                    .doc('${userEmail}_$categoryName')
+                    .get(),
+                builder: (context, subscriptionSnapshot) {
+                  if (subscriptionSnapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return ListTile(
+                      title: Text(categoryName),
+                      trailing: CircularProgressIndicator(),
+                    );
                   }
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  }
-                  var counts = snapshot.data!;
-                  int messageCount = counts[0];
-                  int inscriptionCount = counts[1];
+                  final isSubscribed =
+                      subscriptionSnapshot.data?.exists ?? false;
                   return Card(
                     child: ListTile(
-                      title: Text('Catégorie: $categoryName'),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text('Inscriptions: $inscriptionCount'),
-                          Text('Messages: $messageCount'),
-                          Row(
-                            children: [
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      Theme.of(context).primaryColor,
-                                  foregroundColor: Colors.white,
-                                ),
-                                child: Text('Add Message'),
-                                onPressed: () =>
-                                    _showAddMessageForm(categoryName),
-                              ),
-                              SizedBox(width: 8),
-                              ElevatedButton(
-                                child: Text('Delete Category'),
-                                onPressed: () =>
-                                    _deleteCategory(documents[index].id),
-                              ),
-                            ],
-                          ),
-                        ],
+                      title: Text(categoryName),
+                      trailing: ElevatedButton(
+                        onPressed: () =>
+                            _toggleSubscription(categoryName, isSubscribed),
+                        child: Text(isSubscribed ? 'Unsubscribe' : 'Subscribe'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              isSubscribed ? Colors.red : Colors.green,
+                        ),
                       ),
                     ),
                   );
@@ -244,11 +139,6 @@ class _CategoryPageState extends State<CategoryPage> {
             },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddCategoryForm,
-        tooltip: 'Ajouter Catégorie',
-        child: Icon(Icons.add),
       ),
     );
   }
