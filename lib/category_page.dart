@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'app_state.dart'; // This file should have your ApplicationState which contains the user's email.
 
@@ -11,6 +12,7 @@ class CategoryPage extends StatefulWidget {
 
 class _CategoryPageState extends State<CategoryPage> {
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
 
   void _toggleSubscription(String categoryName, bool isSubscribed) async {
     final userEmail =
@@ -29,8 +31,11 @@ class _CategoryPageState extends State<CategoryPage> {
 
       if (categoryQuery.docs.isNotEmpty) {
         DocumentReference categoryDocRef = categoryQuery.docs.first.reference;
-        categoryDocRef.update({'Inscriptions': FieldValue.increment(-1)});
+        await categoryDocRef.update({'Inscriptions': FieldValue.increment(-1)});
       }
+
+      await _firebaseMessaging.unsubscribeFromTopic(categoryName);
+      print('Unsubscribed from $categoryName successfully');
     } else {
       // Subscribe the user and increment the inscriptions count
       await _firebaseFirestore.collection('inscription').doc(docId).set({
@@ -47,8 +52,12 @@ class _CategoryPageState extends State<CategoryPage> {
 
       if (categoryQuery.docs.isNotEmpty) {
         DocumentReference categoryDocRef = categoryQuery.docs.first.reference;
-        categoryDocRef.update({'Inscriptions': FieldValue.increment(1)});
+        await categoryDocRef.update({'Inscriptions': FieldValue.increment(1)});
       }
+
+      // Subscribe the user to the FCM topic
+      await _firebaseMessaging.subscribeToTopic(categoryName);
+      print('Subscribed from $categoryName successfully');
     }
   }
 
@@ -93,8 +102,7 @@ class _CategoryPageState extends State<CategoryPage> {
       body: StreamBuilder<QuerySnapshot>(
         stream: _firebaseFirestore.collection('category').snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.hasError)
-            return Text('Erreur lors du chargement des données');
+          if (snapshot.hasError) return Text('Error loading data');
           if (snapshot.connectionState == ConnectionState.waiting)
             return Center(child: CircularProgressIndicator());
 
