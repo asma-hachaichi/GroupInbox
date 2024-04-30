@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
+import 'notification_service.dart'; // Import the NotificationService class from the previous snippet
 
 class MessagePageAdmin extends StatefulWidget {
   @override
@@ -154,6 +155,8 @@ class MessagePageState extends State<MessagePageAdmin> {
       'object': object,
       'body': body,
     });
+    sendNotification(category,
+        body); // Call the sendNotification method (see the previous snippet for the implementation)
 
     // Query for the category document with the name equal to 'category'
     var querySnapshot = await categoriesCollection
