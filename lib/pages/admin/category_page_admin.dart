@@ -21,19 +21,19 @@ class _CategoryPageState extends State<CategoryPageAdmin> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Ajouter un nouveau message'),
+          title: Text('Add a new message to $categoryName'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text('Catégorie: $categoryName',
+              Text('Category: $categoryName',
                   style: TextStyle(fontWeight: FontWeight.bold)),
               TextField(
                 controller: objectController,
-                decoration: InputDecoration(labelText: 'Objet du message'),
+                decoration: InputDecoration(labelText: 'Object'),
               ),
               TextField(
                 controller: bodyController,
-                decoration: InputDecoration(labelText: 'Corps du message'),
+                decoration: InputDecoration(labelText: 'Body'),
                 maxLines: 3,
               ),
             ],

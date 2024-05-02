@@ -2,38 +2,31 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class LoginPage extends StatefulWidget {
+class SignUpPage extends StatefulWidget {
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _SignUpPageState createState() => _SignUpPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SignUpPageState extends State<SignUpPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String _errorMessage = '';
 
-  void _signInWithEmailAndPassword() async {
+  void _signUpWithEmailAndPassword() async {
     try {
       final UserCredential userCredential =
-          await _auth.signInWithEmailAndPassword(
+          await _auth.createUserWithEmailAndPassword(
         email: _usernameController.text,
         password: _passwordController.text,
       );
 
       if (userCredential.user != null) {
-        // Check if the user is 'asma@gmail.com'
-        if (userCredential.user!.uid == 'vIVPsbDZekcpB8FDL2nVNCfn76E2') {
-          // Navigate to categories if sign in is successful and uid matches
-          context.go('/categories/admin');
-        } else {
-          // Navigate to messages if sign in is successful for other users
-          context.go('/categories');
-        }
+        context.go('/categories');
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
-        _errorMessage = e.message ?? 'An unknown error occurred';
+        _errorMessage = e.message ?? 'An unknown error occurred during signup';
       });
     }
   }
@@ -51,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Login",
+                "Sign Up",
                 style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -77,27 +70,28 @@ class _LoginPageState extends State<LoginPage> {
                 obscureText: true,
               ),
               SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _signInWithEmailAndPassword,
-                child: Text('Login'),
-              ),
-              SizedBox(height: 8),
-              TextButton(
-                onPressed: () => context.go('/signup'),
-                child: Text.rich(
-                  TextSpan(
-                    text: "Don't have an account? ",
-                    style: TextStyle(color: Colors.grey),
-                    children: <TextSpan>[
-                      TextSpan(
-                        text: 'Sign up',
-                        style: TextStyle(
-                            color: Colors.deepPurple,
-                            decoration: TextDecoration.underline),
-                      ),
-                    ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      context.go('/');
+                    },
+                    child: Text('Cancel'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors
+                          .white, // Optional styling for the cancel button
+                    ),
                   ),
-                ),
+                  ElevatedButton(
+                    onPressed: _signUpWithEmailAndPassword,
+                    child:
+                        Text('Sign Up', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -108,7 +102,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    // Clean up the controller when the widget is disposed.
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
