@@ -10,6 +10,7 @@ import 'package:gtk_flutter/pages/user/message_page.dart';
 import 'package:gtk_flutter/pages/login_page.dart';
 import 'package:gtk_flutter/pages/admin/category_page_admin.dart';
 import 'package:gtk_flutter/pages/admin/message_page_admin.dart';
+import 'package:gtk_flutter/pages/signup_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +35,10 @@ final _router = GoRouter(
     GoRoute(
       path: '/',
       builder: (context, state) => LoginPage(),
+    ),
+    GoRoute(
+      path: '/signup',
+      builder: (context, state) => SignUpPage(),
     ),
     GoRoute(
       path: '/categories',
@@ -61,6 +66,7 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       routerConfig: _router,
+      debugShowCheckedModeBanner: false,
     );
   }
 }
