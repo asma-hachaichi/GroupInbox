@@ -11,7 +11,7 @@ class CategoryPage extends StatefulWidget {
 }
 
 class _CategoryPageState extends State<CategoryPage> {
-  CategoryService _categoryService = CategoryService(); // Service instance
+  CategoryService _categoryService = CategoryService();
 
   @override
   Widget build(BuildContext context) {
@@ -40,8 +40,8 @@ class _CategoryPageState extends State<CategoryPage> {
           ),
         ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _categoryService.getCategoryStream(),
+      body: FutureBuilder<QuerySnapshot>(
+        future: _categoryService.getCategoryStream(),
         builder: (context, snapshot) {
           if (snapshot.hasError) return Text('Error loading data');
           if (snapshot.connectionState == ConnectionState.waiting)
@@ -69,8 +69,15 @@ class _CategoryPageState extends State<CategoryPage> {
                     child: ListTile(
                       title: Text(categoryName),
                       trailing: ElevatedButton(
-                        onPressed: () => _categoryService.toggleSubscription(
-                            userEmail, categoryName, isSubscribed),
+                        onPressed: () {
+                          _categoryService
+                              .toggleSubscription(
+                                  userEmail, categoryName, isSubscribed)
+                              .then((_) {
+                            // This ensures UI is refreshed after state changes in Firestore
+                            setState(() {});
+                          });
+                        },
                         child: Text(isSubscribed ? 'Unsubscribe' : 'Subscribe'),
                         style: ElevatedButton.styleFrom(
                             backgroundColor:

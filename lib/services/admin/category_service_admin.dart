@@ -3,9 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class CategoryService {
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
-  void addCategory(String name) {
+  Future<void> addCategory(String name) async {
     String newCategoryId = DateTime.now().millisecondsSinceEpoch.toString();
-    _firebaseFirestore.collection('category').doc(newCategoryId).set({
+    await _firebaseFirestore.collection('category').doc(newCategoryId).set({
       'ID': newCategoryId,
       'Name': name,
       'Messages': 0,

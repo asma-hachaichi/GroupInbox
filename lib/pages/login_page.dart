@@ -22,12 +22,10 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (userCredential.user != null) {
-        // Check if the user is 'asma@gmail.com'
+        // Check if the user is 'asma@gmail.com' (admin)
         if (userCredential.user!.uid == 'vIVPsbDZekcpB8FDL2nVNCfn76E2') {
-          // Navigate to categories if sign in is successful and uid matches
           context.go('/categories/admin');
         } else {
-          // Navigate to messages if sign in is successful for other users
           context.go('/categories');
         }
       }
@@ -104,13 +102,5 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    // Clean up the controller when the widget is disposed.
-    _usernameController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 }
