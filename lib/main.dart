@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'app_state.dart';
-import 'package:gtk_flutter/services/notification_handling.dart'; // Make sure this import points to your NotificationState file
+import 'package:gtk_flutter/services/notification_handling.dart';
 import 'package:gtk_flutter/pages/user/category_page.dart';
 import 'package:gtk_flutter/pages/user/message_page.dart';
 import 'package:gtk_flutter/pages/login_page.dart';
@@ -14,17 +14,14 @@ import 'package:gtk_flutter/pages/signup_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // Initialize Firebase
+  await Firebase.initializeApp();
 
-  // Initialize your NotificationState
   NotificationState notificationState = NotificationState();
 
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider(create: (context) => ApplicationState()),
-      Provider(
-          create: (context) =>
-              notificationState), // You could also use ChangeNotifierProvider if NotificationState was a ChangeNotifier
+      Provider(create: (context) => notificationState),
     ],
     child: const App(),
   ));

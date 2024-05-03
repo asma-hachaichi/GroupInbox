@@ -5,12 +5,10 @@ class CategoryService {
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
 
-  // Stream of categories from Firestore
-  Stream<QuerySnapshot> getCategoryStream() {
-    return _firebaseFirestore.collection('category').snapshots();
+  Future<QuerySnapshot> getCategoryStream() {
+    return _firebaseFirestore.collection('category').get();
   }
 
-  // Check if the user is subscribed to a specific category
   Future<bool> checkSubscription(String userEmail, String categoryName) async {
     final docId = '${userEmail}_$categoryName';
     DocumentSnapshot docSnapshot =
@@ -18,7 +16,6 @@ class CategoryService {
     return docSnapshot.exists;
   }
 
-  // Toggle the subscription status of a user for a given category
   Future<void> toggleSubscription(
       String userEmail, String categoryName, bool isSubscribed) async {
     final docId = '${userEmail}_$categoryName';
@@ -29,7 +26,6 @@ class CategoryService {
     }
   }
 
-  // Unsubscribe the user from a category
   Future<void> unsubscribeUser(String docId, String categoryName) async {
     await _firebaseFirestore.collection('inscription').doc(docId).delete();
     await updateInscriptionCount(categoryName, -1);
@@ -37,7 +33,6 @@ class CategoryService {
     print('Unsubscribed from $categoryName');
   }
 
-  // Subscribe the user to a category
   Future<void> subscribeUser(String userEmail, String categoryName) async {
     final docId = '${userEmail}_$categoryName';
     await _firebaseFirestore.collection('inscription').doc(docId).set({
@@ -49,7 +44,6 @@ class CategoryService {
     print('Subscribed to $categoryName');
   }
 
-  // Update the count of inscriptions for a category
   Future<void> updateInscriptionCount(String categoryName, int change) async {
     var categoryQuery = await _firebaseFirestore
         .collection('category')

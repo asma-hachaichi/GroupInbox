@@ -115,35 +115,24 @@ class _CategoryPageState extends State<CategoryPageAdmin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Categories'),
-      ),
+      appBar: AppBar(title: Text('Categories')),
       drawer: Drawer(
         child: SafeArea(
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
               ListTile(
-                title: Text('Categories'),
-                onTap: () {
-                  Navigator.pop(context);
-                },
-              ),
+                  title: Text('Categories'),
+                  onTap: () => Navigator.pop(context)),
               ListTile(
-                title: Text('Messages'),
-                onTap: () {
-                  context.go('/messages/admin');
-                },
-              ),
+                  title: Text('Messages'),
+                  onTap: () => context.go('/messages/admin')),
               ListTile(
-                title: Text('Logout'),
-                leading: Icon(Icons.logout),
-                iconColor: Colors.red,
-                textColor: Colors.red,
-                onTap: () {
-                  context.go('/');
-                },
-              ),
+                  title: Text('Logout'),
+                  leading: Icon(Icons.logout),
+                  iconColor: Colors.red,
+                  textColor: Colors.red,
+                  onTap: () => context.go('/')),
             ],
           ),
         ),

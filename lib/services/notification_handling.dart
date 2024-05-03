@@ -14,17 +14,5 @@ class NotificationState extends ChangeNotifier {
         print("Notification body: ${message.notification!.body}");
       }
     });
-
-    FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessageHandler);
-  }
-
-  static Future<void> _firebaseBackgroundMessageHandler(
-      RemoteMessage message) async {
-    // Handle background notification
-    print("Background notification received");
-    if (message.notification != null) {
-      print("Background notification title: ${message.notification!.title}");
-      print("Background notification body: ${message.notification!.body}");
-    }
   }
 }
